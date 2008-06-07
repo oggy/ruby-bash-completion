@@ -1,6 +1,43 @@
 # Michael Schuerig, michael@schuerig.de, 2007-02-24
 # [2007-12-21] Updated by Victor Serbin (chepel@hotmail.com) for gem v1.0
+# [2008-06-07] George Ogata (george.ogata@gmail.com) gem name completion
 # Free for all uses.
+
+GEM_CACHE_FILE=`ruby -rubygems -rrubygems/source_info_cache \
+                 -e 'print Gem::SourceInfoCache.new.latest_cache_file'`
+GEM_AVAILABLE_FILE=`dirname $GEM_CACHE_FILE`/available_names.completion
+
+#
+# Output all available gem names.
+#
+function _gem_available_names {
+    if [ ! -e $GEM_AVAILABLE_FILE -o \
+         $GEM_CACHE_FILE -nt $GEM_AVAILABLE_FILE ]; then
+        ruby <<EOF
+            require 'rubygems/source_info_cache_entry'
+            text = File.read('$GEM_CACHE_FILE')
+            names = Marshal.load(text).values.map do |entry|
+              entry.source_index.map{|name, spec| spec.name}
+            end.flatten.uniq
+            open('$GEM_AVAILABLE_FILE', 'w'){|f| f.puts names}
+EOF
+    fi
+
+    cat $GEM_AVAILABLE_FILE
+}
+
+#
+# Output all installed gem names.
+#
+function _gem_installed_names {
+    ruby <<EOF
+        require 'rubygems'
+        names = Gem::SourceIndex.from_installed_gems.map do |name, spec|
+          spec.name
+        end.uniq
+        puts names
+EOF
+}
 
 have gem &&
 _gem()
@@ -238,7 +275,7 @@ _gem()
         completions="$COMMON_OPTIONS $HELP_OPTIONS"
         ;;
       install)
-        completions="$COMMON_OPTIONS $INSTALL_OPTIONS"
+        completions="$COMMON_OPTIONS $INSTALL_OPTIONS `_gem_available_names`"
         ;;
       list)
         completions="$COMMON_OPTIONS $LIST_OPTIONS"
@@ -274,7 +311,7 @@ _gem()
         completions="$COMMON_OPTIONS $SPECIFICATION_OPTIONS"
         ;;
       uninstall)
-        completions="$COMMON_OPTIONS $UNINSTALL_OPTIONS"
+        completions="$COMMON_OPTIONS $UNINSTALL_OPTIONS `_gem_installed_names`"
         ;;
       unpack)
         completions="$COMMON_OPTIONS $UNPACK_OPTIONS"
