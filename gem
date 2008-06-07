@@ -1,29 +1,32 @@
 # Michael Schuerig, michael@schuerig.de, 2007-02-24
 # [2007-12-21] Updated by Victor Serbin (chepel@hotmail.com) for gem v1.0
-# [2008-06-07] George Ogata (george.ogata@gmail.com) gem name completion
+# [2008-06-07] George Ogata (george.ogata@gmail.com) gem name completion and more
 # Free for all uses.
 
-GEM_CACHE_FILE=`ruby -rubygems -rrubygems/source_info_cache \
+GEM_LATEST_CACHE_FILE=`ruby -rubygems -rrubygems/source_info_cache \
                  -e 'print Gem::SourceInfoCache.new.latest_cache_file'`
-GEM_AVAILABLE_FILE=`dirname $GEM_CACHE_FILE`/available_names.completion
+GEM_CACHE_FILE=`ruby -rubygems -rrubygems/source_info_cache \
+                -e 'print Gem::SourceInfoCache.new.cache_file'`
+GEM_ALL_NAMES_FILE=`dirname $GEM_LATEST_CACHE_FILE`/all_names.completion
+GEM_ALL_NAME_VERSIONS_FILE=`dirname $GEM_LATEST_CACHE_FILE`/all_name_versions.completion
 
 #
-# Output all available gem names.
+# Output all gem names.
 #
-function _gem_available_names {
-    if [ ! -e $GEM_AVAILABLE_FILE -o \
-         $GEM_CACHE_FILE -nt $GEM_AVAILABLE_FILE ]; then
+function _gem_all_names {
+    if [ ! -e $GEM_ALL_NAMES_FILE -o \
+         $GEM_LATEST_CACHE_FILE -nt $GEM_ALL_NAMES_FILE ]; then
         ruby <<EOF
             require 'rubygems/source_info_cache_entry'
-            text = File.read('$GEM_CACHE_FILE')
+            text = File.read('$GEM_LATEST_CACHE_FILE')
             names = Marshal.load(text).values.map do |entry|
               entry.source_index.map{|name, spec| spec.name}
             end.flatten.uniq
-            open('$GEM_AVAILABLE_FILE', 'w'){|f| f.puts names}
+            open('$GEM_ALL_NAMES_FILE', 'w'){|f| f.puts names}
 EOF
     fi
 
-    cat $GEM_AVAILABLE_FILE
+    cat $GEM_ALL_NAMES_FILE
 }
 
 #
@@ -37,6 +40,25 @@ function _gem_installed_names {
         end.uniq
         puts names
 EOF
+}
+
+#
+# Output all gem NAME-VERSION strings.
+#
+function _gem_all_name_versions {
+    if [ ! -e $GEM_ALL_NAME_VERSIONS_FILE -o \
+         $GEM_LATEST_CACHE_FILE -nt $GEM_ALL_NAME_VERSIONS_FILE ]; then
+        ruby <<EOF
+            require 'rubygems/source_info_cache_entry'
+            text = File.read('$GEM_LATEST_CACHE_FILE')
+            names = Marshal.load(text).values.map do |entry|
+              entry.source_index.map{|name, spec| name}
+            end.flatten.uniq
+            open('$GEM_ALL_NAME_VERSIONS_FILE', 'w'){|f| f.puts names}
+EOF
+    fi
+
+    cat $GEM_ALL_NAME_VERSIONS_FILE
 }
 
 have gem &&
@@ -64,6 +86,29 @@ _gem()
       --config-file\
       --backtrace\
       --debug'
+
+    LOCAL_REMOTE_OPTIONS='\
+      -l --local\
+      -r --remote\
+      -b --both\
+      -B --bulk-threshold\
+      --source\
+      -p --http-proxy --no-http-proxy\
+      -u --update-sources --no-update-sources'
+
+    INSTALL_UPDATE_OPTIONS='\
+      -i --install-dir\
+      -n --bindir\
+      -d --rdoc --no-rdoc\
+         --ri --no-ri\
+      -E --env-shebang --no-env-shebang\
+      -f --force --no-force\
+      -t --test --no-test\
+      -w --wrappers --no-wrappers\
+      -P --trust-policy\
+         --ignore-dependencies\
+      -y --include-dependencies\
+         --format-executable --no-format-executable'
 
     CERT_OPTIONS='\
       -a -add\
@@ -94,7 +139,12 @@ _gem()
       -R --reverse-dependencies --no-reverse-dependencies\
       -p --pipe'
 
-    ENVIRONMENT_OPTIONS=''
+    ENVIRONMENT_OPTIONS='\
+      packageversion\
+      gemdir\
+      gempath\
+      version\
+      remotesources'
 
     FETCH_OPTIONS='\
       -v --version\
@@ -106,40 +156,18 @@ _gem()
     GENERATE_INDEX_OPTIONS='\
       -d --directory'
 
-    HELP_OPTIONS=$COMMANDS
+    HELP_OPTIONS="commands examples $COMMANDS"
 
     INSTALL_OPTIONS='\
       --platform\
-      -v --version\
-      -i --install-dir\
-      -d --rdoc --no-rdoc\
-      --ri --no-ri\
-      -E --env-shebang\
-      -f --force --no-force\
-      -t --test --no-test\
-      -w --wrappers --no-wrappers\
-      -P --trust-policy\
-      --ignore-dependencies\
-      -y --include-dependencies\
-      --format-executable --no-format-executable\
-      -l --local\
-      -r --remote\
-      -b --both\
-      -B --bulk-threshold\
-      --source\
-      -p --http-proxy --no-http-proxy\
-      -u --update-sources --no-update-sources'
+      -v --version'
 
     LIST_OPTIONS='\
+      -i --installed --no-installed\
+      -v --version\
       -d --details --no-details\
       --versions --no-versions\
-      -l --local\
-      -r --remote\
-      -b --both\
-      -B --bulk-threshold\
-      --source\
-      -p --http-proxy --no-http-proxy\
-      -u --update-sources --no-update-sources'
+      -a --all'
 
     LOCK_OPTIONS='\
       -s --strict --no-strict'
@@ -154,16 +182,12 @@ _gem()
       -v --version'
 
     QUERY_OPTIONS='\
+      -i --installed --no-installed\
+      -v --version\
       -n --name-matches\
       -d --details --no-details\
       --versions --no-versions\
-      -l --local\
-      -r --remote\
-      -b --both\
-      -B --bulk-threshold\
-      --source\
-      -p --http-proxy --no-http-proxy\
-      -u --update-sources --no-update-sources'
+      -a --all'
 
     RDOC_OPTIONS='\
       --all\
@@ -172,15 +196,11 @@ _gem()
       -v --version'
 
     SEARCH_OPTIONS='\
+      -i --installed --no-installed\
+      -v --version\
       -d --details --no-details\
       --versions --no-versions\
-      -l --local\
-      -r --remote\
-      -b --both\
-      -B --bulk-threshold\
-      --source\
-      -p --http-proxy --no-http-proxy\
-      -u --update-sources --no-update-sources'
+      -a --all'
 
     SERVER_OPTIONS='\
       -p --port\
@@ -197,19 +217,14 @@ _gem()
     SPECIFICATION_OPTIONS='\
       -v --version\
       --platform\
-      --all\
-      -l --local\
-      -r --remote\
-      -b --both\
-      -B --bulk-threshold\
-      --source\
-      -p --http-proxy --no-http-proxy\
-      -u --update-sources --no-update-sources'
+      --all'
 
     UNINSTALL_OPTIONS='\
       -a --all --no-all\
       -i --ignore-dependencies --no-ignore-dependencies\
       -x --executables --no-executables\
+      -i --install-dir\
+      -n --bindir\
       -v --version\
       --platform'
 
@@ -219,25 +234,7 @@ _gem()
 
     UPDATE_OPTIONS='\
       --system\
-      --platform\
-      -i --install-dir\
-      -d --rdoc --no-rdoc\
-      --ri --no-ri\
-      -E --env-shebang\
-      -f --force --no-force\
-      -t --test --no-test\
-      -w --wrappers --no-wrappers\
-      -P --trust-policy\
-      --ignore-dependencies\
-      -y --include-dependencies\
-      --format-executable --no-format-executable\
-      -l --local\
-      -r --remote\
-      -b --both\
-      -B --bulk-threshold\
-      --source\
-      -p --http-proxy --no-http-proxy\
-      -u --update-sources --no-update-sources'
+      --platform'
 
     WHICH_OPTIONS='\
       -a --all --no-all\
@@ -254,19 +251,19 @@ _gem()
         completions="$COMMON_OPTIONS $CHECK_OPTIONS"
         ;;
       cleanup)
-        completions="$COMMON_OPTIONS $CLEANUP_OPTIONS"
+        completions="$COMMON_OPTIONS $CLEANUP_OPTIONS `_gem_installed_names`"
         ;;
       contents)
-        completions="$COMMON_OPTIONS $CONTENTS_OPTIONS"
+        completions="$COMMON_OPTIONS $CONTENTS_OPTIONS `_gem_installed_names`"
         ;;
       dependency)
-        completions="$COMMON_OPTIONS $DEPENDENCY_OPTIONS"
+        completions="$COMMON_OPTIONS $LOCAL_REMOTE_OPTIONS $DEPENDENCY_OPTIONS `_gem_all_names`"
         ;;
       environment)
         completions="$COMMON_OPTIONS $ENVIRONMENT_OPTIONS"
         ;;
       fetch)
-        completions="$COMMON_OPTIONS $FETCH_OPTIONS"
+        completions="$COMMON_OPTIONS $FETCH_OPTIONS `_gem_all_names`"
         ;;
       generate_index)
         completions="$COMMON_OPTIONS $GENERATE_INDEX_OPTIONS"
@@ -275,31 +272,31 @@ _gem()
         completions="$COMMON_OPTIONS $HELP_OPTIONS"
         ;;
       install)
-        completions="$COMMON_OPTIONS $INSTALL_OPTIONS `_gem_available_names`"
+        completions="$COMMON_OPTIONS $INSTALL_UPDATE_OPTIONS $LOCAL_REMOTE_OPTIONS $INSTALL_OPTIONS `_gem_all_names`"
         ;;
       list)
-        completions="$COMMON_OPTIONS $LIST_OPTIONS"
+        completions="$COMMON_OPTIONS $LOCAL_REMOTE_OPTIONS $LIST_OPTIONS"
         ;;
       lock)
-        completions="$COMMON_OPTIONS $LOCK_OPTIONS"
+        completions="$COMMON_OPTIONS $LOCK_OPTIONS `_gem_all_name_versions`"
         ;;
       mirror)
         completions="$COMMON_OPTIONS $MIRROR_OPTIONS"
         ;;
       outdated)
-        completions="$COMMON_OPTIONS $OUTDATED_OPTIONS"
+        completions="$COMMON_OPTIONS $LOCAL_REMOTE_OPTIONS $OUTDATED_OPTIONS"
         ;;
       pristine)
-        completions="$COMMON_OPTIONS $PRISTINE_OPTIONS"
+        completions="$COMMON_OPTIONS $PRISTINE_OPTIONS `_gem_installed_names`"
         ;;
       query)
-        completions="$COMMON_OPTIONS $QUERY_OPTIONS"
+        completions="$COMMON_OPTIONS $LOCAL_REMOTE_OPTIONS $QUERY_OPTIONS"
         ;;
       rdoc)
-        completions="$COMMON_OPTIONS $RDOC_OPTIONS"
+        completions="$COMMON_OPTIONS $RDOC_OPTIONS `_gem_installed_names`"
         ;;
       search)
-        completions="$COMMON_OPTIONS $SEARCH_OPTIONS"
+        completions="$COMMON_OPTIONS $LOCAL_REMOTE_OPTIONS $SEARCH_OPTIONS"
         ;;
       server)
         completions="$COMMON_OPTIONS $SERVER_OPTIONS"
@@ -308,16 +305,16 @@ _gem()
         completions="$COMMON_OPTIONS $SOURCES_OPTIONS"
         ;;
       specification)
-        completions="$COMMON_OPTIONS $SPECIFICATION_OPTIONS"
+        completions="$COMMON_OPTIONS $LOCAL_REMOTE_OPTIONS $SPECIFICATION_OPTIONS `_gem_all_names`"
         ;;
       uninstall)
         completions="$COMMON_OPTIONS $UNINSTALL_OPTIONS `_gem_installed_names`"
         ;;
       unpack)
-        completions="$COMMON_OPTIONS $UNPACK_OPTIONS"
+        completions="$COMMON_OPTIONS $UNPACK_OPTIONS `_gem_installed_names`"
         ;;
       update)
-        completions="$COMMON_OPTIONS $UPDATE_OPTIONS"
+        completions="$COMMON_OPTIONS $LOCAL_REMOTE_OPTIONS $INSTALL_UPDATE_OPTIONS $UPDATE_OPTIONS `_gem_installed_names`"
         ;;
       which)
         completions="$COMMON_OPTIONS $WHICH_OPTIONS"
@@ -327,7 +324,7 @@ _gem()
         ;;
     esac
 
-    COMPREPLY=( $( compgen -W "$completions" -- $cur ))
+    COMPREPLY=( $( compgen -W "$completions" -- $cur ) )
     return 0
 }
 
