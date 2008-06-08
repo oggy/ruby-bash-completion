@@ -4,8 +4,8 @@
 # Nicholas Seckar <nseckar@gmail.com>
 # Saimon Moore <saimon@webtypes.com>
 # http://www.webtypes.com/2006/03/31/rake-completion-script-that-handles-namespaces
-# http://onrails.org/articles/2006/08/30/namespaces-and-rake-command-completion
 # http://errtheblog.com/posts/31-rake-around-the-rosie
+# http://onrails.org/articles/2006/11/17/rake-command-completion-using-rake
 
 have rake &&
 _rake()
@@ -18,7 +18,7 @@ _rake()
     completions=`ruby - "$COMP_LINE" <<'EOF'
       def main
         if have_rakefile?
-          if have_cache?
+          if have_cache? && no_rakefiles_modified?
             complete cache, stem
             background{update_cache}
           else
@@ -32,6 +32,12 @@ _rake()
 
       def have_rakefile?
         %w[Rakefile rakefile Rakefile.rb rakefile.rb].any?{|f| File.file?(f)}
+      end
+
+      def no_rakefiles_modified?
+        Dir[ __FILE__, 'Rakefile', 'lib/tasks/**/*.rake', 'vendor/plugins/*/tasks/**/*.rake'].all? do |path|
+          File.mtime(path) < File.mtime(cache_file)
+        end
       end
 
       def have_cache?
