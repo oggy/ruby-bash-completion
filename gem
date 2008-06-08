@@ -1,6 +1,6 @@
 # Michael Schuerig, michael@schuerig.de, 2007-02-24
 # [2007-12-21] Updated by Victor Serbin (chepel@hotmail.com) for gem v1.0
-# [2008-06-07] George Ogata (george.ogata@gmail.com) gem name completion and more
+# [2008-06-07] Updated by George Ogata (george.ogata@gmail.com) for v1.1 + gem names
 # Free for all uses.
 
 GEM_LATEST_CACHE_FILE=`ruby -rubygems -rrubygems/source_info_cache \
