@@ -65,11 +65,18 @@ EOF
 
   _gem()
   {
-      local cur prev completions
+      local cur subcommand completions
 
       COMPREPLY=()
       cur=${COMP_WORDS[COMP_CWORD]}
-      prev=${COMP_WORDS[COMP_CWORD-1]}
+
+      subcommand=''
+      for i in `seq 1 ${#COMP_WORDS[*]}`; do
+        if [ -n "${COMP_WORDS[i]%%-*}" ]; then
+          subcommand=${COMP_WORDS[i]}
+          break
+        fi
+      done
 
       COMMANDS='build cert check cleanup contents dependency\
         environment fetch generate_index help install list\
@@ -241,7 +248,7 @@ EOF
         -a --all --no-all\
         -g --gems-first --no-gems-first'
 
-      case "${prev}" in
+      case "${subcommand}" in
         build)
           completions="$COMMON_OPTIONS $BUILD_OPTIONS"
           ;;
