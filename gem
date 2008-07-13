@@ -81,7 +81,7 @@ EOF
       COMMANDS='build cert check cleanup contents dependency\
         environment fetch generate_index help install list\
         lock mirror outdated pristine query rdoc search server\
-        sources specification uninstall unpack update which'
+        sources specification stale uninstall unpack update which'
 
       GEM_OPTIONS='\
         -h --help\
@@ -164,7 +164,7 @@ EOF
       GENERATE_INDEX_OPTIONS='\
         -d --directory'
 
-      HELP_OPTIONS="commands examples $COMMANDS"
+      HELP_OPTIONS="commands examples platforms $COMMANDS"
 
       INSTALL_OPTIONS='\
         --platform\
@@ -314,6 +314,9 @@ EOF
           ;;
         specification)
           completions="$COMMON_OPTIONS $LOCAL_REMOTE_OPTIONS $SPECIFICATION_OPTIONS `_gem_all_names`"
+          ;;
+        stale)
+          completions="$COMMON_OPTIONS"
           ;;
         uninstall)
           completions="$COMMON_OPTIONS $UNINSTALL_OPTIONS `_gem_installed_names`"
