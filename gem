@@ -250,7 +250,7 @@ EOF
 
       case "${subcommand}" in
         build)
-          completions="$COMMON_OPTIONS $BUILD_OPTIONS"
+          completions="$COMMON_OPTIONS"
           ;;
         cert)
           completions="$COMMON_OPTIONS $CERT_OPTIONS"
