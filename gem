@@ -71,7 +71,7 @@ EOF
       cur=${COMP_WORDS[COMP_CWORD]}
 
       subcommand=''
-      for i in `seq 1 ${#COMP_WORDS[*]}`; do
+      for ((i=1; i<=${#COMP_WORDS[*]}; ++i)); do
         if [ -n "${COMP_WORDS[i]%%-*}" ]; then
           subcommand=${COMP_WORDS[i]}
           break
